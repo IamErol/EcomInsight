@@ -7,16 +7,13 @@ from .models import ProductInformation, ProductInformationAdditionalFields
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
 from .import_export import CSVExportImport
-
 from drf_spectacular.utils import (extend_schema_view,
                                    extend_schema,
                                    OpenApiParameter,
                                    OpenApiTypes)
-
 from .serializers import (ProductInfoSerializer,
                           ProductInformationAdditionalFieldsSerializer,
                           CreateProductSerializer)
-
 from .api_queries import (get_all_items,
                           get_items_by_name,
                           get_items_by_sku,
