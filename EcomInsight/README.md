@@ -1,3 +1,5 @@
+([URL_to_image](https://1drv.ms/i/s!AlTBRgvLUJqxhN039vrbGTC6lYUpeQ?e=n7VEDS))
+
 # Expense and Pricing Calculator WebApi
 
 Welcome to the Expense and Pricing Calculator web application! This Django-based application is designed to assist you in managing your online product sales more effectively. It calculates expenses and recommends optimal pricing based on your desired profit margin. Additionally, you can store and modify records over time, making it a valuable tool for maintaining a profitable online business.
