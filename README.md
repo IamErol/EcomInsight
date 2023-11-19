@@ -1,3 +1,4 @@
+![Alt text](https://github.com/IamErol/EcomInsight/blob/master/EcomInsight/images/Screenshot_171.png)
 # Expense and Pricing Calculator WebApi
 
 Welcome to the Expense and Pricing Calculator web application! This Django-based application is designed to assist you in managing your online product sales more effectively. It calculates expenses and recommends optimal pricing based on your desired profit margin. Additionally, you can store and modify records over time, making it a valuable tool for maintaining a profitable online business.
