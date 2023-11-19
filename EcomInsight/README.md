@@ -1,4 +1,4 @@
-([URL_to_image](https://1drv.ms/i/s!AlTBRgvLUJqxhN039vrbGTC6lYUpeQ?e=n7VEDS))
+![Demo design]([URL_to_image](https://1drv.ms/i/s!AlTBRgvLUJqxhN039vrbGTC6lYUpeQ?e=n7VEDS))
 
 # Expense and Pricing Calculator WebApi
 
