@@ -30,19 +30,19 @@ To run the Expense and Pricing Calculator application, follow these steps:
 2. **Navigate to the project directory**:
 
    ```
-   cd calculator-main
+   cd EcomInsight
    ```
 
 3. **Build the Docker image**:
 
    ```
-   docker build -t calculator-main
+   docker build -t EcomInsight
    ```
 
 4. **Run the Docker container**:
 
    ```
-   docker run -p 8000:8000 calculator-main
+   docker-compose up
    ```
 
 5. **Access the application**:
