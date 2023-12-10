@@ -4,20 +4,19 @@ from .models import ProductInformation
 def get_all_items():
     """Get all records from database."""
     return (ProductInformation.objects.
-            prefetch_related('other_fields').
-            all())
+            prefetch_related('other_fields').all())
 
 
 def get_items_by_name(name: str):
     """Filter result by name."""
-    return (ProductInformation.objects.
+    return (ProductInformation.objects.prefetch_related('other_fields').
             select_related('product_owner').
             filter(name__icontains=name))
 
 
 def get_items_by_sku(sku: str):
     """Filter result by sku."""
-    return (ProductInformation.objects.
+    return (ProductInformation.objects.prefetch_related('other_fields').
             select_related('product_owner').
             filter(sku=sku))
 

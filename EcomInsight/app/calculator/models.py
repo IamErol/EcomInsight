@@ -1,13 +1,11 @@
 from django.db import models
 from django.conf import settings
 
-import uuid
-
-# Create your models here.
-
-
 
 class ProductInformation(models.Model):
+    """
+    Product model that contains all information about product.
+    """
     name = models.CharField(max_length=255, null=False, blank=False)
     created_at = models.DateTimeField(auto_now_add=True)
     sku = models.CharField(max_length=255, null=True, blank=True)
@@ -29,7 +27,10 @@ class ProductInformation(models.Model):
     class Meta:
         verbose_name_plural = 'ProductInformation'
 
+
 class ProductInformationAdditionalFields(models.Model):
+    """Table for additional fields that user might add for its products."""
+
     field_name = models.CharField(max_length=255, null=True, blank=True)
     value = models.DecimalField(max_digits=9, decimal_places=4, null=True, blank=True)
     product = models.ForeignKey(ProductInformation,

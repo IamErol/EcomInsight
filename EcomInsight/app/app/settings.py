@@ -113,6 +113,7 @@ DATABASES = {
         'USER': os.environ.get('DB_USER'),
         'PORT': os.environ.get('DB_PORT'),
         'PASSWORD': os.environ.get('DB_PASS'),
+        'ATOMIC_REQUESTS': True,
     }
 }
 
@@ -250,3 +251,5 @@ LOGGING = {
 
 CELERY_BROKER_URL = 'redis://redis:6379/0'
 
+CELERY_RESULT_BACKEND = 'redis://redis:6379/0'
+CELERY_TASK_TRACK_STARTED = True

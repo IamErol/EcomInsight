@@ -81,7 +81,7 @@ class CalculationsTest(TestCase):
         data = {"margin_percent": 100}
 
         calculator = Calculator(sum_values=sum_list, percent_values=percent_list, user_input=data)
-        total_expenses = calculator.get_total_expences()
+        total_expenses = calculator.get_total_expenses()
         self.assertEqual(total_expenses, Decimal('116.26'))
 
     def test_calculate_recommended_price(self):
@@ -100,7 +100,7 @@ class CalculationsTest(TestCase):
         data = {"margin_percent": 20}
 
         calculator = Calculator(sum_values=sum_list, percent_values=percent_list, user_input=data)
-        total_expenses = calculator.get_total_expences()
+        total_expenses = calculator.get_total_expenses()
         self.assertEqual(total_expenses, Decimal('300.00'))
 
     def test_expenses_with_no_sum_values(self):
@@ -110,7 +110,7 @@ class CalculationsTest(TestCase):
         data = {"margin_percent": 15}
 
         calculator = Calculator(sum_values=sum_list, percent_values=percent_list, user_input=data)
-        total_expenses = calculator.get_total_expences()
+        total_expenses = calculator.get_total_expenses()
         self.assertEqual(total_expenses, Decimal('0.00'))
 
     def test_empty_lists(self):
@@ -120,7 +120,7 @@ class CalculationsTest(TestCase):
         data = {"margin_percent": 10}
 
         calculator = Calculator(sum_values=sum_list, percent_values=percent_list, user_input=data)
-        total_expenses = calculator.get_total_expences()
+        total_expenses = calculator.get_total_expenses()
         self.assertEqual(total_expenses, Decimal('0.00'))
 
     def test_negative_margin_price_calculation(self):
@@ -139,5 +139,5 @@ class CalculationsTest(TestCase):
         recommended_price = Decimal('125')
         calculator = Calculator(sum_values=[], percent_values=[], user_input=data)
 
-        net_profit = calculator.get_net_profit(total_expences=total_expenses, recommended_price=recommended_price)
+        net_profit = calculator.get_net_profit(total_expenses=total_expenses, recommended_price=recommended_price)
         self.assertEqual(net_profit, Decimal('25.00'))

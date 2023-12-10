@@ -1,39 +1,36 @@
 import csv
-from django.http import HttpResponse
+from .api_queries import get_all_items_for_auth_user
+from .models import ProductInformation
 
 
-class CSVExportImport:
-    """Class for exporting and importing CSV files."""
-    def __init__(self, model_class, exceptions=None):
-        self.model_class = model_class
-        self.exceptions = exceptions
+def write_to_csv(user, file_path):
+    """
+    Write authorised user's products to CSV file.
+    """
+    # Fetch products and prefetch related fields
+    products = get_all_items_for_auth_user(user)
+    additional_field_names = set()
+    for product in products:
+        for field in product.other_fields.all():
+            additional_field_names.add(field.field_name)
 
-    def get_model_fields(self):
-        """
-        Get the fields of the Django model class, excluding exceptions.
+    # Prepare file path for CSV
+    with open(file_path, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
 
-        Yields:
-            str: The name of each field in the model.
-        """
-        # queryset.model._meta.get_fields()
-        for field in self.model_class.model._meta.get_fields():
-            if self.exceptions is None or field.name not in self.exceptions:
-                yield field.name
+        # Write CSV headers
+        field_names = [field.name for field in ProductInformation._meta.get_fields() if field.name != 'other_fields']
+        writer.writerow(field_names + list(additional_field_names))
 
-    def export_to_csv(self, queryset, file_name: str):
-        """Generate and export a CSV file from a queryset of the given model."""
-        response = HttpResponse(content_type='text/csv')
-        response['Content-Disposition'] = f'attachment; filename="{file_name}.csv"'
+        # Write data rows
+        for product in products:
+            row_data = [getattr(product, field) for field in field_names]
 
-        writer = csv.writer(response)
+            # Dynamically add additional field data
+            additional_data = {field.field_name: field.value for field in product.other_fields.all()}
+            for field_name in additional_field_names:
+                row_data.append(additional_data.get(field_name, ''))
 
-        # Write column headers dynamically based on the model's fields
-        headers = [field for field in self.get_model_fields()]
-        writer.writerow(headers)
+            writer.writerow(row_data)
 
-        # Write data from the queryset to the CSV file
-        for item in queryset:
-            row = [getattr(item, field) for field in headers]
-            writer.writerow(row)
-
-        return response
+# TODO: Change the order of the fields in the CSV file.

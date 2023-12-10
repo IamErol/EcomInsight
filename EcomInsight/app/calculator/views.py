@@ -1,34 +1,41 @@
+import os
+from celery.result import AsyncResult
+from rest_framework import status
+from django.http import HttpResponse
 from rest_framework.views import APIView
-from drf_spectacular.utils import extend_schema
 from rest_framework.response import Response
 from .services import Calculator, UserInputHandler
 from rest_framework import viewsets, mixins
-from .models import ProductInformation, ProductInformationAdditionalFields
+from .models import ProductInformationAdditionalFields
 from rest_framework.authentication import TokenAuthentication
 from rest_framework.permissions import IsAuthenticated
-from .import_export import CSVExportImport
 from drf_spectacular.utils import (extend_schema_view,
                                    extend_schema,
                                    OpenApiParameter,
                                    OpenApiTypes)
 from .serializers import (ProductInfoSerializer,
                           ProductInformationAdditionalFieldsSerializer,
-                          CreateProductSerializer)
+                          CreateProductSerializer, CsvSerializer)
 from .api_queries import (get_all_items,
                           get_items_by_name,
                           get_items_by_sku,
                           get_all_items_for_auth_user)
+from .tasks import generate_csv_task
 
 
 class SumAllExpences(APIView):
-    """View to calculate user input."""
+    """
+    View to calculate user input.
+    This view provides unauthorized users access to calculation functionality.
+    It returns expenses, recommended price and net profit, saving is not allowed.
+    """
 
     serializer_class = ProductInfoSerializer
 
     @extend_schema(request=ProductInfoSerializer,
                    responses={200: ProductInfoSerializer})
     def post(self, request):
-        """Post request tho handle calculator input from user."""
+        """Post request to handle calculator input from user."""
 
         serializer = ProductInfoSerializer(data=request.data,
                                            context={'request': request})
@@ -36,20 +43,20 @@ class SumAllExpences(APIView):
         if serializer.is_valid(raise_exception=True):
             kwargs = serializer.validated_data
 
+            # Parse user input data and prepare for further calculations.
             lists = UserInputHandler(kwargs).parse_user_input()
-
+            # Calculate expenses, recommended price and net profit.
             calculate = Calculator(sum_values=lists.sum_values,
                                    percent_values=lists.percent_values,
                                    user_input=kwargs)
 
-            expenses = calculate.get_total_expences()
+            expenses = calculate.get_total_expenses()
             recommended_price = calculate.get_recommended_price(expenses)
             net_profit = calculate.get_net_profit(expenses, recommended_price)
 
             return Response({'expenses': expenses,
                              'recommended_price': recommended_price,
-                             'net_profit': net_profit}
-                            )
+                             'net_profit': net_profit})
 
 
 @extend_schema_view(
@@ -69,7 +76,7 @@ class SumAllExpences(APIView):
     )
 )
 class ItemsViewSet(viewsets.ModelViewSet, mixins.UpdateModelMixin, ):
-    """Perform CRUD operations."""
+    """Perform CRUD operations for items."""
 
     queryset = get_all_items()
     serializer_class = ProductInfoSerializer
@@ -111,19 +118,56 @@ class OtherFields(mixins.UpdateModelMixin,
 
 
 class ImportExportCSV(APIView):
-    """Class for operations related to CSV files."""
+    """
+    Class for operations related to CSV files.
+    Post method creates a celery task to generate a CSV file and returns the task ID.
+    Get method checks the status of a CSV generation task and returns the file if ready.
+    """
 
     serializer_class = ProductInfoSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
 
-    def get(self, request):
-        """Get file with products of user in CSV format."""
+    def __init__(self, **kwargs):
+        super().__init__(kwargs)
+        self.action = None
 
-        user = self.request.user.pk
-        data = get_all_items_for_auth_user(user)
+    def get_serializer_class(self):
+        if self.action == 'create':
+            return CsvSerializer
+        return ProductInfoSerializer
 
-        write_to_csv = CSVExportImport(data)
-        csv_file = write_to_csv.export_to_csv(queryset=data,
-                                              file_name='products')
-        return csv_file
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(name='task_id', description='Task ID for the CSV generation', required=True, type=str)
+        ]
+    )
+    def get(self, request, *args, **kwargs):
+        """
+        GET method to handle CSV download requests.
+        This method checks the status of a CSV generation task and returns the file if ready.
+        """
+        task_id = request.query_params.get('task_id')
+        if not task_id:
+            return Response({'error': 'No task_id provided'}, status=400)
+        # Getting task result.
+        task_result = AsyncResult(task_id)
+
+        if task_result.state == 'SUCCESS':
+            file_path = task_result.get()
+            with open(file_path, 'rb') as f:
+                response = HttpResponse(f, content_type='text/csv')
+                response['Content-Disposition'] = 'attachment; filename="products.csv"'
+            os.remove(file_path)  # Remove file after download to save space.
+            return response
+        else:
+            return Response({'status': 'Processing'}, status=status.HTTP_102_PROCESSING)
+
+    def post(self, request):
+        """
+        POST method to start CSV generation.
+        This method triggers a Celery task to generate a CSV file.
+        """
+        user_id = request.user.id
+        task = generate_csv_task.delay(user_id)
+        return Response({'task_id': task.id}, status=status.HTTP_200_OK)

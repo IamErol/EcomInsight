@@ -31,3 +31,4 @@ venv.bak/
 app/logs/
 .logs/
 .logs
+logs/
