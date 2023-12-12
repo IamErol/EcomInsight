@@ -1,5 +1,6 @@
 import os
 from celery.result import AsyncResult
+from django.core.cache import cache
 from rest_framework import status
 from django.http import HttpResponse
 from rest_framework.views import APIView
@@ -94,14 +95,23 @@ class ItemsViewSet(viewsets.ModelViewSet, mixins.UpdateModelMixin, ):
         """Get queryset."""
 
         user = self.request.user.pk
-        queryset = get_all_items_for_auth_user(user)
         name = self.request.query_params.get('name')
         sku = self.request.query_params.get('sku')
 
+        cache_key = 'Items'
+        cached_queryset = cache.get(cache_key)
+
+
+        queryset = get_all_items_for_auth_user(user)
+
         if name:
-            queryset = get_items_by_name(name)
+            return get_items_by_name(name)
         if sku:
-            queryset = get_items_by_sku(sku)
+            return get_items_by_sku(sku)
+        if cached_queryset is not None:
+            return cached_queryset
+
+        cache.set(cache_key, queryset, timeout=60 * 5)
         return queryset
 
 
@@ -127,10 +137,6 @@ class ImportExportCSV(APIView):
     serializer_class = ProductInfoSerializer
     authentication_classes = [TokenAuthentication]
     permission_classes = [IsAuthenticated]
-
-    def __init__(self, **kwargs):
-        super().__init__(kwargs)
-        self.action = None
 
     def get_serializer_class(self):
         if self.action == 'create':

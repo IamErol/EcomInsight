@@ -1,4 +1,5 @@
 """Calculator app serializers."""
+from django.core.cache import cache
 from rest_framework import serializers, status
 from .models import ProductInformation, ProductInformationAdditionalFields
 from django.db import transaction
@@ -78,6 +79,7 @@ class ProductInfoSerializer(serializers.ModelSerializer):
 
             self.create_other_fields(other_fields, product_information)
             product_information.save()
+            cache.delete('Items')
             return product_information
 
         raise serializers.ValidationError('Unauthorized user.')
@@ -131,7 +133,7 @@ class ProductInfoSerializer(serializers.ModelSerializer):
 
             # Bulk create users custom added fields.
             ProductInformationAdditionalFields.objects.bulk_create(new_fields)
-
+        cache.delete('Items')
         return super().update(instance, validated_data)
 
 
